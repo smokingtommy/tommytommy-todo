@@ -4,174 +4,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TODO管理</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #f5f4f0;
-      --surface: #ffffff;
-      --surface2: #f0efe9;
-      --border: #e2e0d8;
-      --border2: #ccc9be;
-      --text: #1a1916;
-      --text2: #6b6860;
-      --text3: #a8a69e;
-      --accent: #2d6a4f;
-      --accent-light: #e8f5ee;
-      --accent-text: #1b4332;
-      --danger: #c0392b;
-      --danger-light: #fdf0ee;
-      --warn: #b7791f;
-      --warn-light: #fef9ee;
-      --radius: 8px;
-      --radius-lg: 12px;
-      --font: 'Georgia', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
-      --font-ui: 'Helvetica Neue', 'Hiragino Sans', 'Meiryo', sans-serif;
+      --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0efe9;
+      --border: #e2e0d8; --border2: #ccc9be;
+      --text: #1a1916; --text2: #6b6860; --text3: #a8a69e;
+      --accent: #2d6a4f; --accent-light: #e8f5ee; --accent-text: #1b4332;
+      --danger: #c0392b; --danger-light: #fdf0ee;
+      --warn: #b7791f; --warn-light: #fef9ee;
+      --radius: 8px; --radius-lg: 12px;
+      --font: 'Georgia','Hiragino Mincho ProN','Yu Mincho',serif;
+      --font-ui: 'Helvetica Neue','Hiragino Sans','Meiryo',sans-serif;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #111110;
-        --surface: #1c1b19;
-        --surface2: #252420;
-        --border: #2e2c28;
-        --border2: #3d3b35;
-        --text: #e8e6e0;
-        --text2: #8a887f;
-        --text3: #555350;
-        --accent: #52b788;
-        --accent-light: #1a3328;
-        --accent-text: #95d5b2;
-        --danger: #e57373;
-        --danger-light: #2a1a1a;
-        --warn: #f6ad55;
-        --warn-light: #2a2010;
+        --bg: #111110; --surface: #1c1b19; --surface2: #252420;
+        --border: #2e2c28; --border2: #3d3b35;
+        --text: #e8e6e0; --text2: #8a887f; --text3: #555350;
+        --accent: #52b788; --accent-light: #1a3328; --accent-text: #95d5b2;
+        --danger: #e57373; --danger-light: #2a1a1a;
+        --warn: #f6ad55; --warn-light: #2a2010;
       }
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-ui);
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }
-
+    body { background: var(--bg); color: var(--text); font-family: var(--font-ui); min-height: 100vh; padding: 2rem 1rem; }
     .app { max-width: 680px; margin: 0 auto; }
-
-    .header {
-      margin-bottom: 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem;
-    }
-    .header-left h1 {
-      font-family: var(--font);
-      font-size: 28px;
-      font-weight: normal;
-      letter-spacing: 0.02em;
-      margin-bottom: 4px;
-    }
+    .header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+    .header-left h1 { font-family: var(--font); font-size: 28px; font-weight: normal; letter-spacing: 0.02em; margin-bottom: 4px; }
     .header-left p { font-size: 12px; color: var(--text3); letter-spacing: 0.05em; }
     .sync-status { font-size: 11px; color: var(--text3); text-align: right; line-height: 1.6; }
-    .sync-status .dot {
-      display: inline-block; width: 7px; height: 7px;
-      border-radius: 50%; margin-right: 4px; vertical-align: middle;
-      background: var(--text3);
-    }
+    .sync-status .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; background: var(--text3); }
     .sync-status.online .dot { background: var(--accent); }
     .sync-status.syncing .dot { background: var(--warn); animation: blink 1s infinite; }
     .sync-status.error .dot { background: var(--danger); }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px; margin-bottom: 1.5rem;
-    }
-    .stat {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px; text-align: center;
-    }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 1.5rem; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
     .stat-num { font-family: var(--font); font-size: 24px; color: var(--text); display: block; }
     .stat-label { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; display: block; }
-
-    .form-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem; margin-bottom: 1.5rem;
-    }
+    .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.5rem; }
     .input-row { display: flex; gap: 8px; margin-bottom: 10px; }
-    input[type="text"], textarea, select {
-      font-family: var(--font-ui); font-size: 14px;
-      color: var(--text); background: var(--surface2);
-      border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 8px 12px; outline: none; transition: border-color 0.15s;
-    }
+    input[type="text"], textarea, select { font-family: var(--font-ui); font-size: 14px; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; outline: none; transition: border-color 0.15s; }
     input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
     input[type="text"] { flex: 1; }
     select { width: 80px; cursor: pointer; }
     textarea { flex: 1; height: 70px; resize: vertical; line-height: 1.6; }
     .memo-row { display: flex; gap: 8px; align-items: flex-start; }
-
-    button {
-      font-family: var(--font-ui); font-size: 13px;
-      cursor: pointer; border-radius: var(--radius);
-      border: 1px solid var(--border2);
-      background: var(--surface); color: var(--text);
-      padding: 8px 14px; transition: all 0.15s; white-space: nowrap;
-    }
+    button { font-family: var(--font-ui); font-size: 13px; cursor: pointer; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--surface); color: var(--text); padding: 8px 14px; transition: all 0.15s; white-space: nowrap; }
     button:hover { background: var(--surface2); border-color: var(--text3); }
     button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
     .btn-primary:hover { opacity: 0.9; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
     .search-row { margin-bottom: 10px; }
     .search-row input { width: 100%; }
-
-    .toolbar {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;
-    }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
     .filters { display: flex; gap: 6px; flex-wrap: wrap; }
-    .filter-btn {
-      font-size: 12px; padding: 4px 12px; border-radius: 999px;
-      border: 1px solid var(--border); background: transparent; color: var(--text2);
-    }
+    .filter-btn { font-size: 12px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text2); }
     .filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
     .sort-group { display: flex; gap: 4px; }
     .sort-btn { font-size: 12px; padding: 4px 10px; color: var(--text2); }
     .sort-btn.active { background: var(--surface2); color: var(--text); }
-
     .task-list { display: flex; flex-direction: column; gap: 6px; }
-    .task-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
+    .task-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.15s, box-shadow 0.15s; }
     .task-item:hover { border-color: var(--border2); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
     .task-item.done { opacity: 0.6; }
     .task-item.done .task-text { text-decoration: line-through; color: var(--text3); }
     .task-main { display: flex; align-items: center; gap: 10px; padding: 11px 14px; }
-    .check {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 1.5px solid var(--border2); cursor: pointer; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
-    }
+    .check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border2); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
     .check.checked { background: var(--accent); border-color: var(--accent); }
-    .check.checked::after {
-      content: ''; width: 5px; height: 9px;
-      border: 2px solid #fff; border-top: none; border-left: none;
-      transform: rotate(45deg) translateY(-1px); display: block;
-    }
+    .check.checked::after { content: ''; width: 5px; height: 9px; border: 2px solid #fff; border-top: none; border-left: none; transform: rotate(45deg) translateY(-1px); display: block; }
     .task-text { flex: 1; font-size: 14px; min-width: 0; }
     .task-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .priority-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; letter-spacing: 0.04em; }
@@ -179,45 +81,25 @@
     .p-med  { background: var(--warn-light);   color: var(--warn);   border: 1px solid rgba(183,121,31,0.2); }
     .p-low  { background: var(--accent-light); color: var(--accent-text); border: 1px solid rgba(45,106,79,0.2); }
     .ai-btn { font-size: 11px; padding: 3px 8px; color: var(--text2); border-color: var(--border); }
-    .del-btn {
-      background: none; border: none; color: var(--text3);
-      font-size: 18px; padding: 0 2px; line-height: 1; opacity: 0; transition: opacity 0.15s;
-    }
+    .del-btn { background: none; border: none; color: var(--text3); font-size: 18px; padding: 0 2px; line-height: 1; opacity: 0; transition: opacity 0.15s; }
     .task-item:hover .del-btn { opacity: 1; }
-    .task-memo {
-      font-size: 13px; color: var(--text2);
-      padding: 0 14px 10px 42px; line-height: 1.7;
-      max-height: 80px; overflow: hidden;
-    }
+    .task-memo { font-size: 13px; color: var(--text2); padding: 0 14px 10px 42px; line-height: 1.7; max-height: 80px; overflow: hidden; }
     .task-memo.expanded { max-height: none; }
     .memo-toggle { font-size: 11px; color: var(--accent); cursor: pointer; padding: 0 14px 8px 42px; display: block; }
-    .task-summary {
-      font-size: 12px; padding: 7px 14px 9px 42px;
-      border-top: 1px solid var(--border);
-      background: var(--accent-light); color: var(--accent-text);
-      display: flex; gap: 6px; align-items: flex-start; line-height: 1.6;
-    }
+    .task-summary { font-size: 12px; padding: 7px 14px 9px 42px; border-top: 1px solid var(--border); background: var(--accent-light); color: var(--accent-text); display: flex; gap: 6px; align-items: flex-start; line-height: 1.6; }
     .summary-label { font-weight: 600; white-space: nowrap; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
     .task-time { font-size: 10px; color: var(--text3); white-space: nowrap; }
-
-    .pagination {
-      display: flex; justify-content: center; align-items: center;
-      gap: 6px; margin-top: 1.5rem; flex-wrap: wrap;
-    }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 1.5rem; flex-wrap: wrap; }
     .page-btn { font-size: 12px; padding: 5px 12px; color: var(--text2); }
     .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
     .page-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-
     .page-info { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 8px; letter-spacing: 0.04em; }
     .empty { text-align: center; padding: 3rem; color: var(--text3); font-size: 14px; font-family: var(--font); }
     .loading { text-align: center; padding: 3rem; color: var(--text3); font-size: 14px; }
-
-    /* モバイル対応 */
     @media (max-width: 480px) {
       body { padding: 1rem 0.75rem; }
       .header-left h1 { font-size: 22px; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .task-actions { gap: 4px; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
       .priority-badge { display: none; }
     }
   </style>
@@ -227,20 +109,15 @@
   <div class="header">
     <div class="header-left">
       <h1>TODO管理</h1>
-      <p>クラウド同期 · どこからでもアクセス</p>
+      <p>GitHub同期 · どこからでもアクセス</p>
     </div>
-    <div id="sync-status" class="sync-status">
-      <span class="dot"></span>接続中...
-    </div>
+    <div id="sync-status" class="sync-status"><span class="dot"></span>読み込み中...</div>
   </div>
-
   <div class="stats">
     <div class="stat"><span class="stat-num" id="s-total">—</span><span class="stat-label">合計</span></div>
     <div class="stat"><span class="stat-num" id="s-done">—</span><span class="stat-label">完了</span></div>
     <div class="stat"><span class="stat-num" id="s-left">—</span><span class="stat-label">残り</span></div>
-    <div class="stat"><span class="stat-num" id="s-high">—</span><span class="stat-label">優先高</span></div>
   </div>
-
   <div class="form-section">
     <div class="input-row">
       <input type="text" id="task-input" placeholder="タスク名を入力..." />
@@ -255,11 +132,9 @@
       <textarea id="memo-input" placeholder="メモ・詳細（任意）。要約ボタンで短くできます..."></textarea>
     </div>
   </div>
-
   <div class="search-row">
     <input type="text" id="search-input" placeholder="タスク名・メモで検索..." oninput="onSearch()" />
   </div>
-
   <div class="toolbar">
     <div class="filters">
       <button class="filter-btn active" onclick="setFilter('all',this)">すべて</button>
@@ -268,27 +143,27 @@
       <button class="filter-btn" onclick="setFilter('high',this)">優先度: 高</button>
     </div>
     <div class="sort-group">
-      <button class="sort-btn" id="sort-created" onclick="setSort('created_at')">作成順</button>
-      <button class="sort-btn active" id="sort-updated" onclick="setSort('updated_at')">更新順</button>
+      <button class="sort-btn" id="sort-created" onclick="setSort('createdAt')">作成順</button>
+      <button class="sort-btn active" id="sort-updated" onclick="setSort('updatedAt')">更新順</button>
     </div>
   </div>
-
   <div id="page-info" class="page-info"></div>
   <div class="task-list" id="task-list"><div class="loading">読み込み中...</div></div>
   <div class="pagination" id="pagination"></div>
 </div>
 
 <script>
-  const SUPABASE_URL = 'https://dyrnozcgdecvtmdjqron.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_DQBGE9kCs2DCZbNpstzILg_m4P067p0';
-  const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const GITHUB_TOKEN = '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';
+  const REPO_OWNER = 'smokingtommy';
+  const REPO_NAME = 'tommytommy-todo';
+  const FILE_PATH = 'todos.json';
+  const API_BASE = 'https://api.github.com';
 
   const PAGE_SIZE = 20;
-  let tasks = [];
-  let filter = 'all', sortCol = 'updated_at', currentPage = 0, searchQuery = '';
+  let tasks = [], fileSha = null;
+  let filter = 'all', sortCol = 'updatedAt', currentPage = 0, searchQuery = '';
   let expandedMemos = new Set();
-  let totalCount = 0;
+  let saveTimer = null;
   const labels = { high: '高', med: '中', low: '低' };
 
   function setSync(msg, cls) {
@@ -298,182 +173,188 @@
   }
 
   function timeAgo(ts) {
-    const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    const s = Math.floor((Date.now() - ts) / 1000);
     if (s < 60) return 'たった今';
-    if (s < 3600) return Math.floor(s / 60) + '分前';
-    if (s < 86400) return Math.floor(s / 3600) + '時間前';
-    return Math.floor(s / 86400) + '日前';
-  }
-
-  function summarizeText(taskName, memo) {
-    const items = memo.trim()
-      .replace(/[。、,，\n]/g, '|').split('|')
-      .map(s => s.trim()).filter(s => s.length > 1);
-    if (!items.length) return memo.slice(0, 60) + (memo.length > 60 ? '...' : '');
-    if (items.length <= 2) return taskName + 'のため、' + items.join('と') + 'を行う。';
-    const half = Math.ceil(items.length / 2);
-    return taskName + 'として、' + items.slice(0, half).join('・') + 'を実施する。 さらに' + items.slice(half).join('・') + 'も含む。';
+    if (s < 3600) return Math.floor(s/60) + '分前';
+    if (s < 86400) return Math.floor(s/3600) + '時間前';
+    return Math.floor(s/86400) + '日前';
   }
 
   function escHtml(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function summarizeText(taskName, memo) {
+    const items = memo.trim().replace(/[。、,，\n]/g,'|').split('|').map(s=>s.trim()).filter(s=>s.length>1);
+    if (!items.length) return memo.slice(0,60)+(memo.length>60?'...':'');
+    if (items.length<=2) return taskName+'のため、'+items.join('と')+'を行う。';
+    const half = Math.ceil(items.length/2);
+    return taskName+'として、'+items.slice(0,half).join('・')+'を実施する。 さらに'+items.slice(half).join('・')+'も含む。';
+  }
+
+  async function githubGet() {
+    const res = await fetch(`${API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error('GET失敗: ' + res.status);
+    return await res.json();
+  }
+
+  async function githubPut(content, sha) {
+    const body = { message: 'Update todos', content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))), ...(sha ? { sha } : {}) };
+    const res = await fetch(`${API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('PUT失敗: ' + res.status);
+    const data = await res.json();
+    fileSha = data.content.sha;
   }
 
   async function loadTasks() {
-    setSync('同期中...', 'syncing');
+    setSync('読み込み中...', 'syncing');
     try {
-      let query = db.from('todos').select('*', { count: 'exact' });
-
-      if (filter === 'active') query = query.eq('done', false);
-      else if (filter === 'done') query = query.eq('done', true);
-      else if (filter === 'high') query = query.eq('priority', 'high').eq('done', false);
-
-      if (searchQuery) {
-        query = query.or(`text.ilike.%${searchQuery}%,memo.ilike.%${searchQuery}%`);
+      const file = await githubGet();
+      if (file) {
+        fileSha = file.sha;
+        const decoded = decodeURIComponent(escape(atob(file.content.replace(/\n/g,''))));
+        tasks = JSON.parse(decoded);
+      } else {
+        tasks = [];
+        fileSha = null;
       }
-
-      query = query.order(sortCol, { ascending: false })
-                   .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
-
-      const { data, error, count } = await query;
-      if (error) throw error;
-
-      tasks = data || [];
-      totalCount = count || 0;
       setSync('同期済み ✓', 'online');
       renderTasks();
-      await updateStats();
+      updateStats();
     } catch(e) {
-      setSync('接続エラー', 'error');
-      document.getElementById('task-list').innerHTML = `<div class="empty">読み込みに失敗しました。<br>Supabaseの設定を確認してください。</div>`;
+      setSync('読み込み失敗', 'error');
+      document.getElementById('task-list').innerHTML = `<div class="empty">読み込みに失敗しました。<br>しばらく待ってから再読み込みしてください。</div>`;
     }
   }
 
-  async function updateStats() {
+  async function saveTasks() {
+    setSync('保存中...', 'syncing');
     try {
-      const { count: total } = await db.from('todos').select('*', { count: 'exact', head: true });
-      const { count: done }  = await db.from('todos').select('*', { count: 'exact', head: true }).eq('done', true);
-      const { count: high }  = await db.from('todos').select('*', { count: 'exact', head: true }).eq('priority', 'high').eq('done', false);
-      document.getElementById('s-total').textContent = total || 0;
-      document.getElementById('s-done').textContent  = done  || 0;
-      document.getElementById('s-left').textContent  = (total - done) || 0;
-      document.getElementById('s-high').textContent  = high  || 0;
-    } catch(e) {}
+      await githubPut(tasks, fileSha);
+      setSync('同期済み ✓', 'online');
+    } catch(e) {
+      setSync('保存失敗', 'error');
+    }
+  }
+
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveTasks, 1000);
+  }
+
+  function updateStats() {
+    const done = tasks.filter(t=>t.done).length;
+    document.getElementById('s-total').textContent = tasks.length;
+    document.getElementById('s-done').textContent = done;
+    document.getElementById('s-left').textContent = tasks.length - done;
+  }
+
+  function getFiltered() {
+    let result = tasks.filter(t => {
+      if (filter==='active') return !t.done;
+      if (filter==='done') return t.done;
+      if (filter==='high') return t.priority==='high' && !t.done;
+      return true;
+    });
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(t => t.text.toLowerCase().includes(q) || (t.memo||'').toLowerCase().includes(q));
+    }
+    result.sort((a,b) => b[sortCol] - a[sortCol]);
+    return result;
   }
 
   function renderTasks() {
-    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-    document.getElementById('page-info').textContent = totalCount > 0
-      ? `${totalCount}件中 ${currentPage * PAGE_SIZE + 1}〜${Math.min((currentPage + 1) * PAGE_SIZE, totalCount)}件表示`
-      : '';
+    const filtered = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage >= totalPages) currentPage = 0;
+    const pageItems = filtered.slice(currentPage*PAGE_SIZE, (currentPage+1)*PAGE_SIZE);
+
+    document.getElementById('page-info').textContent = filtered.length > 0
+      ? `${filtered.length}件中 ${currentPage*PAGE_SIZE+1}〜${Math.min((currentPage+1)*PAGE_SIZE, filtered.length)}件表示` : '';
 
     const list = document.getElementById('task-list');
-    if (!tasks.length) {
-      list.innerHTML = '<div class="empty">' + (searchQuery ? '検索結果がありません' : 'タスクがありません') + '</div>';
+    if (!pageItems.length) {
+      list.innerHTML = '<div class="empty">'+(searchQuery?'検索結果がありません':'タスクがありません')+'</div>';
     } else {
-      list.innerHTML = tasks.map(t => {
+      list.innerHTML = pageItems.map(t => {
         const memoLong = t.memo && t.memo.length > 120;
         const expanded = expandedMemos.has(t.id);
         return `
-          <div class="task-item ${t.done ? 'done' : ''}">
+          <div class="task-item ${t.done?'done':''}">
             <div class="task-main">
-              <div class="check ${t.done ? 'checked' : ''}" onclick="toggle(${t.id}, ${t.done})"></div>
+              <div class="check ${t.done?'checked':''}" onclick="toggle('${t.id}')"></div>
               <span class="task-text">${escHtml(t.text)}</span>
               <div class="task-actions">
-                <span class="task-time">${timeAgo(t.updated_at)}</span>
+                <span class="task-time">${timeAgo(t.updatedAt)}</span>
                 <span class="priority-badge p-${t.priority}">${labels[t.priority]}</span>
-                ${t.memo && !t.summary ? `<button class="ai-btn" onclick="summarize(${t.id})">要約</button>` : ''}
-                ${t.summary ? `<button class="ai-btn" onclick="clearSummary(${t.id})">要約を消す</button>` : ''}
-                <button class="del-btn" onclick="del(${t.id})" title="削除">×</button>
+                ${t.memo&&!t.summary?`<button class="ai-btn" onclick="summarize('${t.id}')">要約</button>`:''}
+                ${t.summary?`<button class="ai-btn" onclick="clearSummary('${t.id}')">要約を消す</button>`:''}
+                <button class="del-btn" onclick="del('${t.id}')" title="削除">×</button>
               </div>
             </div>
-            ${t.memo && !t.summary ? `
-              <div class="task-memo ${expanded ? 'expanded' : ''}">${escHtml(t.memo)}</div>
-              ${memoLong ? `<span class="memo-toggle" onclick="toggleMemo(${t.id})">${expanded ? '▲ 折りたたむ' : '▼ 続きを読む'}</span>` : ''}
-            ` : ''}
-            ${t.summary ? `<div class="task-summary"><span class="summary-label">要約</span><span>${escHtml(t.summary)}</span></div>` : ''}
+            ${t.memo&&!t.summary?`
+              <div class="task-memo ${expanded?'expanded':''}">${escHtml(t.memo)}</div>
+              ${memoLong?`<span class="memo-toggle" onclick="toggleMemo('${t.id}')">${expanded?'▲ 折りたたむ':'▼ 続きを読む'}</span>`:''}
+            `:''}
+            ${t.summary?`<div class="task-summary"><span class="summary-label">要約</span><span>${escHtml(t.summary)}</span></div>`:''}
           </div>`;
       }).join('');
     }
 
     const pg = document.getElementById('pagination');
-    if (totalPages <= 1) { pg.innerHTML = ''; return; }
+    if (totalPages<=1) { pg.innerHTML=''; return; }
     let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===0?'disabled':''}>←</button>`;
-    for (let i = 0; i < totalPages; i++) {
-      if (totalPages > 7 && Math.abs(i - currentPage) > 2 && i !== 0 && i !== totalPages-1) {
-        if (i === 1 || i === totalPages-2) html += '<span style="color:var(--text3);font-size:12px;padding:0 4px">…</span>';
+    for (let i=0;i<totalPages;i++) {
+      if (totalPages>7 && Math.abs(i-currentPage)>2 && i!==0 && i!==totalPages-1) {
+        if (i===1||i===totalPages-2) html+='<span style="color:var(--text3);font-size:12px;padding:0 4px">…</span>';
         continue;
       }
-      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i+1}</button>`;
+      html+=`<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i+1}</button>`;
     }
-    html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages-1?'disabled':''}>→</button>`;
+    html+=`<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages-1?'disabled':''}>→</button>`;
     pg.innerHTML = html;
   }
 
-  async function addTask() {
+  function addTask() {
     const inp = document.getElementById('task-input');
     const text = inp.value.trim();
     if (!text) return;
-    const btn = document.getElementById('add-btn');
-    btn.disabled = true;
-    setSync('保存中...', 'syncing');
-    try {
-      const { error } = await db.from('todos').insert({
-        text,
-        priority: document.getElementById('priority-select').value,
-        memo: document.getElementById('memo-input').value.trim(),
-        done: false,
-      });
-      if (error) throw error;
-      inp.value = '';
-      document.getElementById('memo-input').value = '';
-      currentPage = 0;
-      await loadTasks();
-    } catch(e) {
-      setSync('保存失敗', 'error');
-      alert('追加に失敗しました: ' + e.message);
-    }
-    btn.disabled = false;
+    const now = Date.now();
+    const id = 't' + now + Math.random().toString(36).slice(2,6);
+    tasks.unshift({ id, text, priority: document.getElementById('priority-select').value, done: false, memo: document.getElementById('memo-input').value.trim(), summary: null, createdAt: now, updatedAt: now });
+    inp.value = ''; document.getElementById('memo-input').value = '';
+    currentPage = 0; renderTasks(); updateStats(); scheduleSave();
   }
 
-  async function toggle(id, currentDone) {
-    setSync('更新中...', 'syncing');
-    try {
-      const { error } = await db.from('todos').update({ done: !currentDone, updated_at: new Date().toISOString() }).eq('id', id);
-      if (error) throw error;
-      await loadTasks();
-    } catch(e) { setSync('更新失敗', 'error'); }
+  function toggle(id) {
+    const t = tasks.find(t=>t.id===id);
+    if (t) { t.done=!t.done; t.updatedAt=Date.now(); renderTasks(); updateStats(); scheduleSave(); }
   }
 
-  async function del(id) {
+  function del(id) {
     if (!confirm('このタスクを削除しますか？')) return;
-    setSync('削除中...', 'syncing');
-    try {
-      const { error } = await db.from('todos').delete().eq('id', id);
-      if (error) throw error;
-      await loadTasks();
-    } catch(e) { setSync('削除失敗', 'error'); }
+    tasks = tasks.filter(t=>t.id!==id);
+    renderTasks(); updateStats(); scheduleSave();
   }
 
-  async function summarize(id) {
-    const t = tasks.find(t => t.id === id);
-    if (!t || !t.memo) return;
-    const summary = summarizeText(t.text, t.memo);
-    setSync('更新中...', 'syncing');
-    try {
-      const { error } = await db.from('todos').update({ summary, updated_at: new Date().toISOString() }).eq('id', id);
-      if (error) throw error;
-      await loadTasks();
-    } catch(e) { setSync('更新失敗', 'error'); }
+  function summarize(id) {
+    const t = tasks.find(t=>t.id===id);
+    if (!t||!t.memo) return;
+    t.summary = summarizeText(t.text, t.memo);
+    t.updatedAt = Date.now(); renderTasks(); scheduleSave();
   }
 
-  async function clearSummary(id) {
-    setSync('更新中...', 'syncing');
-    try {
-      const { error } = await db.from('todos').update({ summary: null, updated_at: new Date().toISOString() }).eq('id', id);
-      if (error) throw error;
-      await loadTasks();
-    } catch(e) { setSync('更新失敗', 'error'); }
+  function clearSummary(id) {
+    const t = tasks.find(t=>t.id===id);
+    if (t) { t.summary=null; t.updatedAt=Date.now(); renderTasks(); scheduleSave(); }
   }
 
   function toggleMemo(id) {
@@ -482,33 +363,26 @@
   }
 
   function setFilter(f, btn) {
-    filter = f; currentPage = 0;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    loadTasks();
+    filter=f; currentPage=0;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); renderTasks();
   }
 
   function setSort(col) {
-    sortCol = col; currentPage = 0;
-    document.getElementById('sort-created').classList.toggle('active', col === 'created_at');
-    document.getElementById('sort-updated').classList.toggle('active', col === 'updated_at');
-    loadTasks();
+    sortCol=col; currentPage=0;
+    document.getElementById('sort-created').classList.toggle('active', col==='createdAt');
+    document.getElementById('sort-updated').classList.toggle('active', col==='updatedAt');
+    renderTasks();
   }
 
   function onSearch() {
-    searchQuery = document.getElementById('search-input').value.trim();
-    currentPage = 0;
-    loadTasks();
+    searchQuery=document.getElementById('search-input').value.trim();
+    currentPage=0; renderTasks();
   }
 
-  function goPage(p) { currentPage = p; loadTasks(); }
+  function goPage(p) { currentPage=p; renderTasks(); }
 
-  document.getElementById('task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
-
-  // リアルタイム同期
-  db.channel('todos-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'todos' }, () => loadTasks())
-    .subscribe();
+  document.getElementById('task-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addTask(); });
 
   loadTasks();
 </script>
